@@ -17,12 +17,29 @@ var sampleTodos = new Todo[] {
     new(5, "Clean the car", DateOnly.FromDateTime(DateTime.Now.AddDays(2)))
 };
 
+var home = app.MapGet("/", () => "Welcome to the Todo API!");
+var homePage = app.MapGet("/index.html", () => Results.Content(File.ReadAllText("htmlpage.html"), "text/html"));
+
 var todosApi = app.MapGroup("/todos");
 todosApi.MapGet("/", () => sampleTodos);
 todosApi.MapGet("/{id}", (int id) =>
     sampleTodos.FirstOrDefault(a => a.Id == id) is { } todo
         ? Results.Ok(todo)
         : Results.NotFound());
+
+var input = todosApi.MapPost("/", (Todo todo) =>
+{
+    if (todo.Id == 0)
+    {
+        return Results.BadRequest("Id must be provided.");
+    }
+    if (string.IsNullOrWhiteSpace(todo.Title))
+    {
+        return Results.BadRequest("Title must be provided.");
+    }
+    sampleTodos.Append(todo);
+    return Results.Created($"/todos/{todo.Id}", todo);
+});
 
 app.Run();
 
