@@ -1,6 +1,19 @@
+using Microsoft.AspNetCore.RateLimiting;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateSlimBuilder(args);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.AddFixedWindowLimiter("default", config =>
+    {
+            config.Window = TimeSpan.FromSeconds(10);
+            config.PermitLimit = 10;
+            config.QueueProcessingOrder = QueueProcessingOrder.OldestFirst;
+            config.QueueLimit = 2;
+    });
+});
 
 builder.Services.ConfigureHttpJsonOptions(options =>
 {
@@ -8,6 +21,7 @@ builder.Services.ConfigureHttpJsonOptions(options =>
 });
 
 var app = builder.Build();
+app.UseRateLimiter();
 
 var sampleTodos = new Todo[] {
     new(1, "Walk the dog"),
